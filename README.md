@@ -3,4 +3,4 @@ Powershell script to recursively build all Visual Studio solutions in a director
 ```
 C:\Test> powershell -file BuildAll.ps1
 ```
-![BuildAll](image.png)
+![BuildAll](Image.png)
