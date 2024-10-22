@@ -2,6 +2,10 @@
 # Build all solutions in directory
 #
 
+param(
+    [Parameter(Mandatory=$false)][string]$skip
+)
+
 if(    $PSVersionTable.PSVersion.Major -ge 7 `
   -or ($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersionTable.PSVersion.Minor -ge 2))
 {
@@ -22,11 +26,17 @@ for($i=0; $i -le 6; $i++)
 
 foreach ($solution in $solutions) 
 {
+    if($PSBoundParameters.ContainsKey('skip') -and $solution.Name.contains($skip))
+    {
+        continue
+        $count++;
+    }
+
     $complete = [math]::Round(($count / $solutions.Count) * 100)
     
 	Write-Progress -Activity "Building $($solution.BaseName)" -Status "$complete%" -PercentComplete $complete
     
-	$proc = Start-Process -Wait -PassThru -NoNewWindow -FilePath "msbuild.exe" -WorkingDirectory $solution.DirectoryName -ArgumentList $solution.Name, "/verbosity:quiet", "/nologo" #,"/p:Configuration=Debug"
+	$proc = Start-Process -Wait -PassThru -NoNewWindow -FilePath "msbuild.exe" -WorkingDirectory $solution.DirectoryName -ArgumentList "`"$($solution.Name)`"", "/verbosity:quiet", "/nologo", "/t:clean" #,"/p:Configuration=Debug"
 
     if($proc.ExitCode -ne 0)
     {
