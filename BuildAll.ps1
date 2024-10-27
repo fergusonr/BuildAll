@@ -12,7 +12,12 @@ if(    $PSVersionTable.PSVersion.Major -ge 7 `
     $PSStyle.Progress.View="Classic" # Backwards compatible
 }
 
-Write-Progress -Activity "Gathering solutions..." -Status 0 -PercentComplete 0
+if($skip -ne "")
+{
+  $msg = "skipping $($skip)"
+}
+
+Write-Progress -Activity "Gathering solutions...$($msg)" -Status 0 -PercentComplete 0
     
 $solutions = Get-ChildItem -Path . -Filter *.sln -ErrorAction SilentlyContinue -Force -Recurse -Depth 1
 
@@ -28,15 +33,15 @@ foreach ($solution in $solutions)
 {
     if($PSBoundParameters.ContainsKey('skip') -and $solution.Name.contains($skip))
     {
-        continue
         $count++;
+        continue
     }
 
     $complete = [math]::Round(($count / $solutions.Count) * 100)
     
 	Write-Progress -Activity "Building $($solution.BaseName)" -Status "$complete%" -PercentComplete $complete
     
-	$proc = Start-Process -Wait -PassThru -NoNewWindow -FilePath "msbuild.exe" -WorkingDirectory $solution.DirectoryName -ArgumentList "`"$($solution.Name)`"", "/verbosity:quiet", "/nologo", "/t:clean" #,"/p:Configuration=Debug"
+	$proc = Start-Process -Wait -PassThru -NoNewWindow -FilePath "msbuild.exe" -WorkingDirectory $solution.DirectoryName -ArgumentList "`"$($solution.Name)`"", "/verbosity:quiet", "/nologo", "/t:clean,restore,build",/p:WarningLevel=0 #,"/p:Configuration=Debug"
 
     if($proc.ExitCode -ne 0)
     {
